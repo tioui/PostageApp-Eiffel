@@ -1,0 +1,3 @@
+[submodule "ejson"]
+	path = ejson
+	url = https://github.com/eiffelhub/json.git
