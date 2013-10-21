@@ -147,6 +147,56 @@ feature -- Access
 
 	attachments:LIST[TUPLE[file_name, content_type, base64_encoded_content:READABLE_STRING_GENERAL]]
 
+	attach_file(a_file_name:READABLE_STRING_GENERAL)
+		require
+			Attach_File_Is_Valid: 	(attached {FILE} (create {RAW_FILE}.make_with_name (a_file_name)) as la_file) implies
+									la_file.exists and then la_file.is_readable
+		do
+			attach_file_with_content_type(a_file_name,find_content_type(a_file_name))
+		end
+
+	attach_file_with_content_type(a_file_name,a_content_type:READABLE_STRING_GENERAL)
+		require
+			Attach_File_Is_Valid: 	(attached {FILE} (create {RAW_FILE}.make_with_name (a_file_name)) as la_file) implies
+									la_file.exists and then la_file.is_readable
+		local
+			l_file:FILE
+			l_data:ARRAYED_LIST[CHARACTER_8]
+		do
+			create {RAW_FILE} l_file.make_with_name (a_file_name)
+			create l_data.make (l_file.count)
+			l_data.append (l_file)
+			attach_from_memory_with_content_type(a_file_name, a_content_type, l_data.area)
+		end
+
+	attach_from_memory(a_file_name:READABLE_STRING_GENERAL;a_data:SPECIAL[CHARACTER_8])
+		do
+			attach_from_memory_with_content_type(a_file_name, find_content_type(a_file_name),a_data)
+		end
+
+	attach_from_memory_with_content_type(a_file_name,a_content_type:READABLE_STRING_GENERAL;a_data:SPECIAL[CHARACTER_8])
+		local
+			l_data_string:STRING_8
+			l_encoder:BASE64
+		do
+			create l_data_string.make (a_data.count)
+			l_data_string.area.copy_data (a_data , 0, 0, a_data.count)
+			create l_encoder
+			attachments.extend ([a_file_name, a_content_type, l_encoder.encoded_string (l_data_string)])
+		end
+
+	attach_from_string(a_file_name,a_data:READABLE_STRING_GENERAL)
+		do
+			attach_from_string_with_content_type(a_file_name,find_content_type(a_file_name),a_data)
+		end
+
+
+
+	attach_from_string_with_content_type(a_file_name,a_content_type,a_data:READABLE_STRING_GENERAL)
+		do
+			attach_from_memory_with_content_type(a_file_name,a_content_type,a_data.to_string_8.area)
+		end
+
 	send
 		do
 			print(json_request+"%N")
@@ -204,6 +254,35 @@ feature {NONE} -- Implementation
 			end
 			if not l_is_found then
 				headers.extend ([a_type,a_value])
+			end
+		end
+
+	find_content_type(a_file_name:READABLE_STRING_GENERAL):READABLE_STRING_GENERAL
+		local
+			l_mime_detector:HTTP_FILE_EXTENSION_MIME_MAPPING
+			l_extension:detachable READABLE_STRING_GENERAL
+			l_extension_position, l_temp_position:INTEGER
+			l_fin:BOOLEAN
+		do
+			from
+				l_extension_position:=1
+				l_fin:=False
+			until
+				not l_fin
+			loop
+				l_temp_position:= a_file_name.index_of ('.', l_extension_position)
+				if l_temp_position=0 then
+					l_fin:=True
+				else
+					l_extension_position:=l_temp_position+1
+				end
+			end
+			create l_mime_detector.make_default
+			l_extension:=l_mime_detector.mime_type (a_file_name.substring (l_extension_position, a_file_name.count))
+			if attached l_extension as la_extension then
+				Result:=la_extension
+			else
+				Result:="application/octet-stream"
 			end
 		end
 
