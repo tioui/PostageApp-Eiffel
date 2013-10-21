@@ -132,4 +132,9 @@ feature {NONE} -- Send Message
             create Result.make_json ("content_type")
         end
 
+    Attachments_type_key: JSON_STRING
+        once
+            create Result.make_json ("attachments")
+        end
+
 end

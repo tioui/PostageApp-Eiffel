@@ -28,22 +28,23 @@ feature {NONE} -- Initialization
 			l_message.recipients.extend ([Email2,l_variables_recipients])
 			l_message.subject:="Sujet!"
 			l_message.from_value:=Email3
+			l_message.attach_file ("/path/to/a/file")
 			l_message.send
 		end
 
 	Email1:READABLE_STRING_GENERAL
 		once
-			Result:="first@email.com"
+			Result:="email1@email.com"
 		end
 
 	Email2:READABLE_STRING_GENERAL
 		once
-			Result:="second@email.com"
+			Result:="email2@email.com"
 		end
 
 	Email3:READABLE_STRING_GENERAL
 		once
-			Result:="third@email.com"
+			Result:="email3@email.com"
 		end
 
 	Api_key:READABLE_STRING_GENERAL

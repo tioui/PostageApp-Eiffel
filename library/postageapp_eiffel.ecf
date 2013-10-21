@@ -10,6 +10,7 @@
 		<library name="encoder" location="$ISE_LIBRARY\contrib\library\web\framework\ewf\text\encoder\encoder.ecf"/>
 		<library name="http" location="$ISE_LIBRARY\contrib\library\network\protocol\http\http.ecf"/>
 		<library name="json" location="..\ejson\library\json.ecf"/>
+		<library name="base64" location="..\base64\base64.ecf"/>
 		<library name="uuid" location="$ISE_LIBRARY\library\uuid\uuid.ecf"/>
 		<cluster name="postageapp_eiffel" location=".\" recursive="true">
 			<file_rule>

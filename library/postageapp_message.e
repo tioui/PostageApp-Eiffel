@@ -161,28 +161,34 @@ feature -- Access
 									la_file.exists and then la_file.is_readable
 		local
 			l_file:FILE
-			l_data:ARRAYED_LIST[CHARACTER_8]
+			l_data:ARRAYED_LIST[NATURAL_8]
 		do
-			create {RAW_FILE} l_file.make_with_name (a_file_name)
+			create {RAW_FILE} l_file.make_open_read (a_file_name)
 			create l_data.make (l_file.count)
-			l_data.append (l_file)
-			attach_from_memory_with_content_type(a_file_name, a_content_type, l_data.area)
+			from
+				l_file.start
+			until
+				l_file.end_of_file
+			loop
+				l_file.read_natural_8
+				if not l_file.end_of_file then
+					l_data.extend (l_file.last_natural_8)
+				end
+			end
+			attach_from_memory_with_content_type(a_file_name, a_content_type, l_data.area.to_array)
 		end
 
-	attach_from_memory(a_file_name:READABLE_STRING_GENERAL;a_data:SPECIAL[CHARACTER_8])
+	attach_from_memory(a_file_name:READABLE_STRING_GENERAL;a_data:ARRAY[NATURAL_8])
 		do
 			attach_from_memory_with_content_type(a_file_name, find_content_type(a_file_name),a_data)
 		end
 
-	attach_from_memory_with_content_type(a_file_name,a_content_type:READABLE_STRING_GENERAL;a_data:SPECIAL[CHARACTER_8])
+	attach_from_memory_with_content_type(a_file_name,a_content_type:READABLE_STRING_GENERAL;a_data:ARRAY[NATURAL_8])
 		local
-			l_data_string:STRING_8
-			l_encoder:BASE64
+			l_encoder:BASE64_ARRAY_ENCODER
 		do
-			create l_data_string.make (a_data.count)
-			l_data_string.area.copy_data (a_data , 0, 0, a_data.count)
 			create l_encoder
-			attachments.extend ([a_file_name, a_content_type, l_encoder.encoded_string (l_data_string)])
+			attachments.extend ([get_file_name(a_file_name), a_content_type, l_encoder.encode64 (a_data)])
 		end
 
 	attach_from_string(a_file_name,a_data:READABLE_STRING_GENERAL)
@@ -193,8 +199,11 @@ feature -- Access
 
 
 	attach_from_string_with_content_type(a_file_name,a_content_type,a_data:READABLE_STRING_GENERAL)
+		local
+			l_encoder:BASE64_STRING_ENCODER
 		do
-			attach_from_memory_with_content_type(a_file_name,a_content_type,a_data.to_string_8.area)
+			create l_encoder
+			attachments.extend ([get_file_name(a_file_name), a_content_type, l_encoder.encode64 (a_data.to_string_8)])
 		end
 
 	send
@@ -268,7 +277,7 @@ feature {NONE} -- Implementation
 				l_extension_position:=1
 				l_fin:=False
 			until
-				not l_fin
+				l_fin
 			loop
 				l_temp_position:= a_file_name.index_of ('.', l_extension_position)
 				if l_temp_position=0 then
@@ -284,6 +293,16 @@ feature {NONE} -- Implementation
 			else
 				Result:="application/octet-stream"
 			end
+		end
+
+	get_file_name(a_file_name:READABLE_STRING_GENERAL):READABLE_STRING_GENERAL
+		local
+			l_file:FILE
+			l_slash_position, l_temp_position:INTEGER
+			l_fin:BOOLEAN
+		do
+			create {RAW_FILE} l_file.make_with_name (a_file_name)
+			Result := l_file.path.components.last.name
 		end
 
 

@@ -39,6 +39,9 @@ feature    {NONE} -- Implementation
 			if not a_object.variables.is_empty then
 				Result.put (list_type_value_to_json(a_object.variables), Variables_key)
 			end
+			if not a_object.attachments.is_empty then
+				Result.put (attachments_json_object(a_object.attachments), Attachments_type_key)
+			end
 		end
 
 	put_argument_in_json(a_json:JSON_OBJECT;a_value:READABLE_STRING_GENERAL;a_key:JSON_STRING)
